@@ -17,11 +17,10 @@ ecg_matrix <- matrix(ecg_data, ncol = num_channels, byrow = TRUE)
 # Extraer los canales
 ecg_ch1 <- ecg_matrix[,1] / 110554.8863  # Convertir a mV
 
-# Crear vector de tiempo
-t <- seq(0, length(ecg_ch1) / fs, by = 1 / fs)
+t <- seq(0, (length(ecg_ch1) - 1) / fs, length.out = length(ecg_ch1))
 
-# Graficar ECG (Canal 1)
-plot(t[1:length(ecg_ch1)], ecg_ch1, type = "l", col = "black", 
+# Graficar ECG
+plot(t, ecg_ch1, type = "l", col = "black", 
      main = "Electrocardiograma (ECG)", xlab = "Tiempo (s)", ylab = "Amplitud (mV)")
 
 #Hasta ahora hemos hecho: 
@@ -30,4 +29,30 @@ plot(t[1:length(ecg_ch1)], ecg_ch1, type = "l", col = "black",
 #   Graficamos ECG con la escala de tiempo correcta.
 
 
+install.packages("pracma")  # Para detección de picos
+install.packages("ggplot2") # Para visualización
 
+library(pracma)
+library(ggplot2)
+
+# Detección de Picos R 
+altura_minima <- 0.6 * max(ecg_ch1)  
+distancia_minima <- fs / 10  
+
+# Detectar picos R
+picos <- findpeaks(ecg_ch1, minpeakheight = altura_minima, minpeakdistance = distancia_minima)
+
+# Verificar si hay picos detectados antes de graficar
+if (!is.null(picos)) {
+  posiciones_R <- picos[,2]  
+  amplitudes_R <- ecg_ch1[posiciones_R]  
+  
+  # Graficar la señal ECG con los picos R
+  plot(t, ecg_ch1, type = "l", col = "blue",
+       main = "Detección de picos R en el ECG", xlab = "Tiempo (s)", ylab = "Amplitud (mV)")
+  
+  points(t[posiciones_R], amplitudes_R, col = "red", pch = 19)  # Picos R en rojo
+  
+} else {
+  print(" No se detectaron picos R. Ajusta los parámetros.")
+}
